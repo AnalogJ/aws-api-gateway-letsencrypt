@@ -33,6 +33,7 @@ if 'AWS_SECRET_ACCESS_KEY' not in os.environ: raise StandardError('AWS_ACCESS_KE
 
 os.environ['PROVIDER'] = os.environ.get('PROVIDER', 'cloudflare')
 os.environ['AWS_DEFAULT_REGION'] = os.environ.get('AWS_DEFAULT_REGION','us-east-1')
+os.environ['CLEANUP'] = os.environ.get('CLEANUP','true')
 
 # Lexicon environmental variables
 lexicon_provider_username_env = "LEXICON_{0}_USERNAME".format(os.environ['PROVIDER'].upper())
@@ -131,9 +132,9 @@ except:
     ])
 
 
-
-print '--> Cleanup all temp files'
-os.remove('config/dehydrated_config.txt')
-cert_files = glob.glob('certs/{0}/*'.format(cust_env['DOMAIN']))
-for f in cert_files:
-    os.remove(f)
+if cust_env['CLEANUP'] == 'true':
+    print '--> Cleanup all temp files'
+    os.remove('config/dehydrated_config.txt')
+    cert_files = glob.glob('certs/{0}/*'.format(cust_env['DOMAIN']))
+    for f in cert_files:
+        os.remove(f)
