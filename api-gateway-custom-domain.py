@@ -92,7 +92,7 @@ except:
         dist_domain_name_cmd = [
             'aws', 'apigateway', 'create-domain-name',
             '--domain-name', cust_env['DOMAIN'],
-            '--certificate-name', "lexicon-{0}".format(date.isoformat()),
+            '--certificate-name', "lexicon-{0}".format(datetime.date.today().isoformat()),
             '--certificate-body', cert_file.read(),
             '--certificate-private-key', privkey_file.read(),
             '--certificate-chain', chain_file.read(),
