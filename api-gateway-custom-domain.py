@@ -9,7 +9,8 @@ import distutils.spawn
 # - DOMAIN
 # - API_GATEWAY_NAME
 # - PROVIDER (defaults to 'cloudflare')
-# - LEXICON_*_USERNAME & LEXICON_*_TOKEN
+# - LEXICON_*_USERNAME & LEXICON_*_TOKEN (where * should be replaced with uppercase PROVIDER value)
+# - AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY
 #
 # When provided with the correct environmental variables it will do the following:
 # - validate that the specified AWS API Gateway exists
