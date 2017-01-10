@@ -85,6 +85,16 @@ try:
     print 'Successfully retrieved existing AWS distribution domain name'
     #TODO: we should update the existing certificates with the new ones here, but the cli doesnt seem to support that yet.
     # https://www.reddit.com/r/aws/comments/4pypkm/updating_an_api_gateway_ssl_certificate_with_the/
+    with open('certs/{0}/cert.pem'.format(cust_env['DOMAIN']), 'r+') as cert_file, open(
+        'certs/{0}/privkey.pem'.format(cust_env['DOMAIN']), 'r+') as privkey_file, open(
+            'certs/{0}/chain.pem'.format(cust_env['DOMAIN']), 'r+') as chain_file:
+                print 'Domain already exists. You will need to manually upload a backup and rotate it out.'
+                print 'Certificate body:'
+                print cert_file.read()
+                print 'Certificate private key:'
+                print privkey_file.read()
+                print 'Certificate chain:'
+                print chain_file.read()
 except:
     print 'Registering domain with AWS api gateway'
 
