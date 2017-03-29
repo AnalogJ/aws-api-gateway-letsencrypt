@@ -13,7 +13,7 @@ function deploy_challenge {
 
     echo "deploy_challenge called: ${DOMAIN}, ${TOKEN_FILENAME}, ${TOKEN_VALUE}"
 
-    lexicon ${PROVIDER,,} create ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}" --auth-access-key="${AWS_ACCESS_KEY_ID}" --auth-access-secret="${AWS_SECRET_ACCESS_KEY}"
+    lexicon ${PROVIDER,,} create ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
 
     sleep 30
 

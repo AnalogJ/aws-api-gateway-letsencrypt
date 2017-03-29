@@ -1,7 +1,5 @@
 FROM python:2-alpine
-
-MAINTAINER Itoc <devops@itoc.com.au>
-
+MAINTAINER Jason Kulatunga <jason@thesparktree.com>
 LABEL name="aws-api-gateway-letsencrypt"
 LABEL version="1.0"
 
@@ -10,18 +8,17 @@ RUN apk add --update --no-cache \
 	curl \
 	openssl \
 	git \
-	groff \
-	less
+	&& rm -rf /var/cache/apk/*
 
 # Install dehydrated (letsencrypt client), awscli & dns-lexicon
-RUN git clone --depth 1 https://github.com/itoc/dehydrated.git /srv/dehydrated && \
+RUN git clone --depth 1 https://github.com/lukas2511/dehydrated.git /srv/dehydrated && \
 	pip install --upgrade pip && \
-	pip install awscli --upgrade && \
-	pip install git+https://github.com/itoc/lexicon.git@v1.2.5#egg=dns-lexicon[route53]
+	pip install --upgrade awscli  && \
+	pip install dns-lexicon
 
 ENV PATH=/srv/dehydrated:$PATH \
-    AWS_DEFAULT_REGION=ap-southeast-1 \
-    PROVIDER=route53
+    AWS_DEFAULT_REGION=ap-southeast-1
+
 # Copy over dehydrated hook file & startup script
 COPY . /srv/
 

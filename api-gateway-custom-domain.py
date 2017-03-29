@@ -129,35 +129,35 @@ if lexicon_provider_token_env not in os.environ: raise StandardError('{0} enviro
 cust_env = os.environ.copy()
 
 print "--> Ensure that our API Gateway exists (otherwise none of this matters)"
-API_GATEWAY_CMD = ['aws', 'apigateway', 'get-rest-apis', '--query',
+api_gateway_cmd = ['aws', 'apigateway', 'get-rest-apis', '--query',
                    'items[?name==`{0}`] | [0].id'.format(cust_env['API_GATEWAY_NAME'])
-                  ]
-API_GATEWAY_ID = json.loads(subprocess.check_output(API_GATEWAY_CMD))
+                   ]
+api_gateway_id = json.loads(subprocess.check_output(api_gateway_cmd))
 
-if not API_GATEWAY_ID:
+if not api_gateway_id:
     print "API Gateway does not exist!"
     sys.exit(-1)
 
-DIST_CERT = list_certificates()
+dist_cert = list_certificates()
 
-CERT_EXISTS = False
+cert_exists = False
 
-if DIST_CERT is not None:
-    CERTIFICATE_EXPIRY = get_certificate_expiry(DIST_CERT.get('CertificateArn', None))
+if dist_cert is not None:
+    cert_expiry = get_certificate_expiry(dist_cert.get('CertificateArn', None))
     # CERTIFICATE_DETAILS = describe_certificate(DIST_CERT.get('CertificateArn', None))
     # 10 days in Future also certificate exists so we can link to api gateway
-    CERT_UPDATE_WINDOW = int(time.time() + 864000)
-    if CERTIFICATE_EXPIRY != 0:
-        if CERTIFICATE_EXPIRY > CERT_UPDATE_WINDOW:
+    cert_update_window = int(time.time() + 864000)
+    if cert_expiry != 0:
+        if cert_expiry > cert_update_window:
             print 'Valid Longer than 10 days. Skipping renew!'
-            CERT_EXISTS = True
-            IMPORT_CERTIFICATE = DIST_CERT
+            cert_exists = True
+            imported_cert = dist_cert
 
 print "--> Configure Dehydrated & Lexicon (keysize for AWS has to be 2048)"
 with open('config/dehydrated_config.txt', 'w+') as f:
     f.write('KEYSIZE="2048"')
 
-if CERT_EXISTS is False:
+if cert_exists is False:
     print "--> Generating letsencrypt SSL Certificates for '{0}'".format(cust_env['DOMAIN'])
     subprocess.call([
         'dehydrated',
@@ -174,78 +174,78 @@ if CERT_EXISTS is False:
     with open('certs/{0}/cert.pem'.format(cust_env['DOMAIN']), 'r+') as cert_file, open(
         'certs/{0}/privkey.pem'.format(cust_env['DOMAIN']), 'r+') as privkey_file, open(
             'certs/{0}/chain.pem'.format(cust_env['DOMAIN']), 'r+') as chain_file:
-        if DIST_CERT is not None:
-            IMPORT_CERTIFICATE = import_certificate(
+        if dist_cert is not None:
+            imported_cert = import_certificate(
                 cert_file, privkey_file, chain_file,
-                DIST_CERT.get('CertificateArn', None)
+                dist_cert.get('CertificateArn', None)
                 )
         else:
-            IMPORT_CERTIFICATE = import_certificate(
+            imported_cert = import_certificate(
                 cert_file, privkey_file, chain_file
                 )
 
-    if IMPORT_CERTIFICATE is None:
+    if imported_cert is None:
         print 'No Certificate installation failed!'
         sys.exit()
 
 print "--> Check if '{0}' is already registered with AWS api gateway".format(cust_env['DOMAIN'])
-DIST_DOMAIN_NAME_CMD = [
+dist_domain_name_cmd = [
     'aws', 'apigateway', 'get-domain-name', '--domain-name', cust_env['DOMAIN'],
     '--query', 'distributionDomainName'
 ]
-DIST_DOMAIN_NAME = None
+dist_domain_name = None
 
 try:
-    DIST_DOMAIN_NAME = json.loads(subprocess.check_output(DIST_DOMAIN_NAME_CMD))
+    dist_domain_name = json.loads(subprocess.check_output(dist_domain_name_cmd))
     print 'Successfully retrieved existing AWS distribution domain name'
 
-    DIST_DOMAIN_NAME_CMD = [
+    dist_domain_name_cmd = [
         'aws', 'apigateway', 'update-domain-name',
         '--domain-name', cust_env['DOMAIN'],
         '--patch-operations',
-        'op=replace,path=/certificateArn,value=' + IMPORT_CERTIFICATE.get('CertificateArn')
+        'op=replace,path=/certificateArn,value=' + imported_cert.get('CertificateArn')
     ]
 except Exception:
     print 'Registering domain with AWS api gateway'
 
-    DIST_DOMAIN_NAME_CMD = [
+    dist_domain_name_cmd = [
         'aws', 'apigateway', 'create-domain-name',
         '--domain-name', cust_env['DOMAIN'],
         '--certificate-name', cust_env['DOMAIN'],
-        '--certificate-arn', IMPORT_CERTIFICATE.get('CertificateArn'),
+        '--certificate-arn', imported_cert.get('CertificateArn'),
         '--query', 'distributionDomainName'
     ]
 
-DIST_NAME_MODIFY = json.loads(subprocess.check_output(DIST_DOMAIN_NAME_CMD))
+dist_name_modify = json.loads(subprocess.check_output(dist_domain_name_cmd))
 
 print "--> Create or update CNAME DNS record for {0} which points to AWS distribution domain name".format(cust_env['PROVIDER'])
 subprocess.Popen([
     'lexicon', format(cust_env['PROVIDER']).lower(), 'create', cust_env['DOMAIN'], 'CNAME',
     '--name={0}'.format(cust_env['DOMAIN']),
-    '--content={0}'.format(DIST_DOMAIN_NAME)
+    '--content={0}'.format(dist_domain_name)
 ], env=cust_env)
 
 print "--> Check if custom domain is already mapped to API Gateway"
-BASE_PATH_MAPPING_CMD = [
+base_path_mapping_cmd = [
     'aws', 'apigateway', 'get-base-path-mapping',
     '--domain-name', cust_env['DOMAIN'],
     '--base-path', '(none)',
     '--query', 'restApiId'
 ]
-BASE_PATH_MAPPING = None
+base_path_mapping = None
 try:
-    BASE_PATH_MAPPING = json.loads(subprocess.check_output(BASE_PATH_MAPPING_CMD))
-    if BASE_PATH_MAPPING == API_GATEWAY_ID:
+    base_path_mapping = json.loads(subprocess.check_output(base_path_mapping_cmd))
+    if base_path_mapping == api_gateway_id:
         print 'Custom domain is correctly mapped to API Gateway'
     else:
-        print 'Custom domain ({0}) is incorrectly mapped to API Gateway (saw {1}, expected {2})'.format(cust_env['DOMAIN'], BASE_PATH_MAPPING,  API_GATEWAY_ID)
+        print 'Custom domain ({0}) is incorrectly mapped to API Gateway (saw {1}, expected {2})'.format(cust_env['DOMAIN'], base_path_mapping, api_gateway_id)
         sys.exit(-1)
 except:
     print 'Custom domain needs to be mapped to API Gatway'
     subprocess.call([
         'aws', 'apigateway', 'create-base-path-mapping',
         '--domain-name', cust_env['DOMAIN'],
-        '--rest-api-id', API_GATEWAY_ID
+        '--rest-api-id', api_gateway_id
     ])
 
 
