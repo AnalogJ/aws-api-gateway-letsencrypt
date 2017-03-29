@@ -11,13 +11,14 @@ If you already have [Lexicon](https://github.com/AnalogJ/lexicon) and [Dehydrate
 you can run the following command:
 
 
-	PROVIDER=CLOUDFLARE \
+	PROVIDER=cloudflare \
 	LEXICON_CLOUDFLARE_USERNAME=? \
 	LEXICON_CLOUDFLARE_TOKEN=? \
 	AWS_ACCESS_KEY_ID=? \
 	AWS_SECRET_ACCESS_KEY=? \
 	DOMAIN=api.quietthyme.com \
 	API_GATEWAY_NAME=dev-quietthyme-api \
+	DOMAIN_BASE_PATH_MAPPING=? \
 	python api-gateway-custom-domain.py
 
 
