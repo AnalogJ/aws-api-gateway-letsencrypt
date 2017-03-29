@@ -13,7 +13,7 @@ function deploy_challenge {
 
     echo "deploy_challenge called: ${DOMAIN}, ${TOKEN_FILENAME}, ${TOKEN_VALUE}"
 
-    lexicon $PROVIDER create ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
+    lexicon ${PROVIDER} create ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
 
     sleep 30
 
@@ -40,7 +40,7 @@ function clean_challenge {
 
     echo "clean_challenge called: ${DOMAIN}, ${TOKEN_FILENAME}, ${TOKEN_VALUE}"
 
-    lexicon $PROVIDER delete ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
+    lexicon ${PROVIDER} delete ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
 
     # This hook is called after attempting to validate each domain,
     # whether or not validation was successful. Here you can delete
@@ -94,4 +94,14 @@ function unchanged_cert {
     #   The path of the file containing the intermediate certificate(s).
 }
 
-HANDLER=$1; shift; $HANDLER "$@"
+exit_hook() {
+  # This hook is called at the end of a dehydrated command and can be used
+  # to do some final (cleanup or other) tasks.
+
+  :
+}
+
+HANDLER="$1"; shift
+if [[ "${HANDLER}" =~ ^(deploy_challenge|clean_challenge|deploy_cert|unchanged_cert|exit_hook)$ ]]; then
+  "$HANDLER" "$@"
+fi
