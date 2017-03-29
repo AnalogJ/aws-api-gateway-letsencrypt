@@ -1,11 +1,7 @@
 ## Api Gateway Custom Domain
 
 
-Using [Lexicon](https://github.com/AnalogJ/lexicon) and [Dehydrated](https://github.com/lukas2511/dehydrated) This tool is to create ssl certs and domain details for api gateway
-
-To use dehydrated with this certificate authority you have to agree to their terms of service which you can find here: https://letsencrypt.org/document
-s/LE-SA-v1.1.1-August-1-2016.pdf
-
+Using [Lexicon](https://github.com/AnalogJ/lexicon) and [Dehydrated](https://github.com/lukas2511/dehydrated), automatically register custom domains in API Gateway with Letsencrypt SSL certificates. See http://blog.thesparktree.com/post/152904762374/custom-domains-for-aws-lambdaapi-gateway-using
 
 If you already have [Lexicon](https://github.com/AnalogJ/lexicon) and [Dehydrated](https://github.com/lukas2511/dehydrated) installed
 you can run the following command:
